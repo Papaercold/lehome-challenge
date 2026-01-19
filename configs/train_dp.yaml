@@ -1,0 +1,37 @@
+dataset:
+  repo_id: local_dataset_129
+  root: Datasets/record/129
+
+policy:
+  type: diffusion
+  device: cuda
+  push_to_hub: false
+  
+  input_features:
+    observation.state:
+      type: STATE
+      shape: [12]
+    observation.images.top_rgb:
+      type: VISUAL
+      shape: [3, 480, 640]
+    observation.images.left_rgb:
+      type: VISUAL
+      shape: [3, 480, 640]
+    observation.images.right_rgb:
+      type: VISUAL
+      shape: [3, 480, 640]
+  
+  output_features:
+    action:
+      type: ACTION
+      shape: [12]
+
+output_dir: outputs/train/dp_129
+batch_size: 16
+steps: 30000
+save_freq: 10000
+log_freq: 1000
+
+wandb:
+  enable: true
+  project: lerobot_dp_129

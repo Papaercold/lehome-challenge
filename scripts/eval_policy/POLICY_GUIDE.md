@@ -109,9 +109,6 @@ Optional:
 ```bash
 # Random policy 
 python -m scripts.eval --policy_type custom --stage single --garment_name Top_Long_Unseen_0 --num_episodes 3
-
-# Rule-based policy 
-python -m scripts.eval --policy_type scripted --stage single --garment_name Top_Long_Unseen_0 --num_episodes 1
 ```
 
 **Record evaluation videos:**

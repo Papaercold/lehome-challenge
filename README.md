@@ -146,7 +146,7 @@ python -m scripts.eval \
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `--policy_type` | Policy type: `lerobot`, `custom`, `scripted` | `lerobot` |
+| `--policy_type` | Policy type: `lerobot`, `custom` | `lerobot` |
 | `--policy_path` | Path to model checkpoint | Required |
 | `--dataset_root` | Dataset path (for metadata, LeRobot only) | Required for LeRobot |
 | `--num_episodes` | Episodes per garment | `5` |
@@ -170,7 +170,7 @@ This project stands on the shoulders of giants. We utilize and build upon the fo
 - **[Isaac Lab](https://isaac-sim.github.io/IsaacLab/main/index.html)** - For modular robot learning environments
 - **[LeRobot](https://github.com/huggingface/lerobot)** - For state-of-the-art Imitation Learning algorithms
 - **[Marble](https://marble.worldlabs.ai/)** - For diverse simulation scene generation
-- 
+
 ## 🖊️ Citation
 
 If you use this framework for your research or participate in the competition, please cite our work:

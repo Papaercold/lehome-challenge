@@ -122,7 +122,9 @@ python -m scripts.eval \
     --policy_path outputs/train/act_fold/checkpoints/100000/pretrained_model \
     --dataset_root Datasets/record/001 \
     --stage release \
-    --num_episodes 5
+    --num_episodes 5 \
+    --enable_cameras \
+    --device cpu
 
 # Evaluate custom policy on single garment
 python -m scripts.eval \
@@ -130,13 +132,14 @@ python -m scripts.eval \
     --policy_path path/to/model.pth \
     --stage single \
     --garment_name Top_Long_Unseen_0 \
-    --num_episodes 5
+    --num_episodes 5 \
+    --enable_cameras \
+    --device cpu
 ```
 
 #### Evaluation Stages
 
 - `--stage release`: Evaluate on all release garments (default)
-- `--stage holdout`: Evaluate on holdout garments (for final testing)
 - `--stage single`: Evaluate on a specific garment (specify with `--garment_name`)
 
 #### Common Options
@@ -166,7 +169,8 @@ This project stands on the shoulders of giants. We utilize and build upon the fo
 - **[Isaac Sim](https://docs.isaacsim.omniverse.nvidia.com/5.1.0/index.html)** - For photorealistic physics simulation
 - **[Isaac Lab](https://isaac-sim.github.io/IsaacLab/main/index.html)** - For modular robot learning environments
 - **[LeRobot](https://github.com/huggingface/lerobot)** - For state-of-the-art Imitation Learning algorithms
-
+- **[Marble](https://marble.worldlabs.ai/)** - For diverse simulation scene generation
+- 
 ## 🖊️ Citation
 
 If you use this framework for your research or participate in the competition, please cite our work:

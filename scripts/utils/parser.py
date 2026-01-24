@@ -406,6 +406,13 @@ def setup_eval_parser() -> argparse.ArgumentParser:
         help="Evaluation stage. 'release' and 'holdout' load garment list from file. 'all' evaluates all the garments.",
     )
     parser.add_argument(
+        "--garment_type",
+        type=str,
+        default="tops_long",
+        choices=["tops_long", "tops_short", "trousers_long", "trousers_short", "custom"],
+        help="Type of garments to evaluate.",
+    )
+    parser.add_argument(
         "--garment_cfg_base_path",
         type=str,
         default="Assets/objects/Challenge_Garment",

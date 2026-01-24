@@ -234,11 +234,28 @@ def eval(args: argparse.Namespace, simulation_app: Any) -> None:
 
     # 4. Load Evaluation List
     stage_capitalized = args.stage.capitalize()  # Capitalize first letter: release -> Release, holdout -> Holdout
+    if args.garment_type == "custom":
+        # Default behavior: loads Release_test_list.txt
+        list_filename = f"{stage_capitalized}_test_list.txt"
+    else:
+        # Map argument to filename
+        type_map = {
+            "tops_long": "Tops_Long",
+            "tops_short": "Tops_Short",
+            "trousers_long": "Trousers_Long",
+            "trousers_short": "Trousers_Short"
+        }
+        # Get filename prefix, fallback to Tops_Long if something unexpected happens
+        file_prefix = type_map.get(args.garment_type, "Tops_Long")
+        list_filename = f"{file_prefix}/{file_prefix}.txt"
+
     eval_list_path = os.path.join(
         args.garment_cfg_base_path,
         stage_capitalized,
-        stage_capitalized + "_test_list.txt"
+        list_filename
     )
+    logger.info(f"Loading evaluation list from: {eval_list_path}")
+    
     with open(eval_list_path, "r") as f:
         eval_list = [line.strip() for line in f.readlines()]
     logger.info(f"Stage {args.stage}: loaded {len(eval_list)} garments")

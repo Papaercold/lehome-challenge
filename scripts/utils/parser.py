@@ -469,7 +469,6 @@ def setup_eval_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--dataset_root",
         type=str,
-        default="Datasets/record/example/record_top_long_release_10/001",
         help="Path of the train dataset (for metadata).",
     )
     parser.add_argument(

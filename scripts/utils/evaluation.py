@@ -238,7 +238,7 @@ def eval(args: argparse.Namespace, simulation_app: Any) -> None:
     eval_list_path = os.path.join(
         args.garment_cfg_base_path,
         stage_capitalized,
-        stage_capitalized + "_list.txt"
+        stage_capitalized + "_test_list.txt"
     )
     with open(eval_list_path, "r") as f:
         eval_list = [line.strip() for line in f.readlines()]

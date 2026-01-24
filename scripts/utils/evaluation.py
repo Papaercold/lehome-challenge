@@ -311,7 +311,36 @@ def eval(args: argparse.Namespace, simulation_app: Any) -> None:
         env.close()
 
     # 6. Final Summary
+    logger.info("=" * 60)
     logger.info("Overall Summary")
+    logger.info("=" * 60)
     if all_garment_metrics:
-        all_episodes = [m for g in all_garment_metrics for m in g["metrics"]]
+        # Aggregate all episode metrics
+        all_episodes = []
+        for garment_data in all_garment_metrics:
+            for episode_metric in garment_data["metrics"]:
+                episode_metric["garment_name"] = garment_data["garment_name"]
+                all_episodes.append(episode_metric)
+
+        # Print overall metrics
         calculate_and_print_metrics(all_episodes)
+
+        # Print per-garment summary
+        logger.info("=" * 60)
+        logger.info("Per-Garment Summary")
+        logger.info("=" * 60)
+        for garment_data in all_garment_metrics:
+            garment_name = garment_data["garment_name"]
+            metrics = garment_data["metrics"]
+            success_count = sum(1 for m in metrics if m["success"])
+            success_rate = success_count / len(metrics) if metrics else 0.0
+            avg_return = np.mean([m["return"] for m in metrics]) if metrics else 0.0
+            logger.info(
+                f"  {garment_name}: Success Rate = {success_rate:.2%}, Avg Return = {avg_return:.2f}"
+            )
+    else:
+        logger.info("No metrics collected (all evaluations failed)")
+
+    logger.info("=" * 60)
+    logger.info("Evaluation completed successfully")
+    logger.info("=" * 60)

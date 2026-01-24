@@ -4,15 +4,28 @@ This guide covers how to train policies for the LeHome Challenge, including feat
 
 ## Table of Contents
 
-- [1. Quick Start](#1-quick-start)
-- [2. Training with Official Policies](#2-training-with-official-policies)
-  - [2.1 Available Policies](#21-available-policies)
-  - [2.2 Basic Training Command](#22-basic-training-command)
-  - [2.3 Configuration File Structure](#23-configuration-file-structure)
-  - [2.4 Dataset Features](#24-dataset-features)
-  - [2.5 Feature Selection](#25-feature-selection)
-  - [2.6 Training Parameters](#26-training-parameters)
-- [3. Bring Your Own Policy](#3-bring-your-own-policy)
+- [Training Guide](#training-guide)
+  - [Table of Contents](#table-of-contents)
+  - [1. Quick Start](#1-quick-start)
+  - [2. Training with Official Policies](#2-training-with-official-policies)
+    - [2.1 Available Policies](#21-available-policies)
+    - [2.2 Basic Training Command](#22-basic-training-command)
+    - [2.3 Configuration File Structure](#23-configuration-file-structure)
+    - [2.4 Dataset Features](#24-dataset-features)
+    - [2.5 Feature Selection](#25-feature-selection)
+      - [Feature Types](#feature-types)
+      - [Verified Feature Combinations](#verified-feature-combinations)
+      - [Using Partial Cameras](#using-partial-cameras)
+    - [2.6 Training Parameters](#26-training-parameters)
+      - [Dataset Configuration](#dataset-configuration)
+      - [Policy Configuration](#policy-configuration)
+      - [Training Hyperparameters](#training-hyperparameters)
+      - [Output Configuration](#output-configuration)
+      - [WandB Configuration](#wandb-configuration)
+  - [3. Bring Your Own Policy](#3-bring-your-own-policy)
+    - [Quick Reference: Package Structure](#quick-reference-package-structure)
+    - [Example: Custom Policy Configuration](#example-custom-policy-configuration)
+  - [Additional Resources](#additional-resources)
 
 ---
 
@@ -61,11 +74,11 @@ A typical training configuration file looks like this:
 
 ```yaml
 dataset:
-  repo_id: local_dataset_129
-  root: Datasets/record/129
+  repo_id: <repo_name>
+  root: Datasets/<dataset_name>
 
 policy:
-  type: act
+  type: <policy_type>
   device: cuda
   push_to_hub: false
   
@@ -88,15 +101,14 @@ policy:
       type: ACTION
       shape: [12]
 
-output_dir: outputs/train/act_129
+output_dir: outputs/train/<output_name>
 batch_size: 16
 steps: 30000
 save_freq: 10000
 log_freq: 1000
 
 wandb:
-  enable: true
-  project: lerobot_act_129
+  enable: false
 ```
 
 **Key sections:**
@@ -105,7 +117,7 @@ wandb:
 - **policy**: Defines policy type, device, and input/output features
 - **output_dir**: Where to save checkpoints and logs
 - **Training parameters**: batch_size, steps, save_freq, log_freq
-- **wandb**: Weights & Biases logging configuration
+- **wandb**: Weights & Biases logging configuration, enable if needed
 
 ### 2.4 Dataset Features
 
@@ -251,15 +263,15 @@ rename_map:
 
 ```yaml
 dataset:
-  repo_id: local_dataset_001        # Dataset identifier
-  root: Datasets/record/001         # Dataset path
+  repo_id: <repo_name>             # Dataset identifier
+  root: Datasets/<dataset_name>    # Dataset path
 ```
 
 #### Policy Configuration
 
 ```yaml
 policy:
-  type: act                         # Policy type: act, diffusion, smolvla, etc.
+  type: <policy_type>               # Policy type: act, diffusion, smolvla, etc.
   device: cuda                      # Device: cuda or cpu
   push_to_hub: false                # Whether to push to HuggingFace Hub
 ```

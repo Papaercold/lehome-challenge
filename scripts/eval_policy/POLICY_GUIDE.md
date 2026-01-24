@@ -12,8 +12,8 @@ Evaluate trained LeRobot models (ACT, Diffusion Policy, SmolVLA):
 python -m scripts.eval \
     --policy_type lerobot \
     --policy_path outputs/train/act_fold/checkpoints/100000/pretrained_model \
-    --dataset_root Datasets/record/001 \
-    --stage release \
+    --garment_type "tops_long" \
+    --dataset_root Datasets/record/example/record_top_long_release_10/001 \
     --num_episodes 5 \
     --enable_cameras \
     --device cpu
@@ -28,7 +28,7 @@ python -m scripts.eval \
 
 ---
 
-## Creating Custom Policies
+## Creating Custom Policies (Without using lerobot)
 
 ### Three Simple Steps
 
@@ -85,8 +85,8 @@ from .my_policy import MyPolicy
 
 ```bash
 python -m scripts.eval \
-    --policy_type my_policy \
-    --stage release \
+    --policy_type custom \
+    --garment_type "tops_long" \
     --num_episodes 5 \
     --enable_cameras \
     --device cpu
@@ -101,34 +101,10 @@ Your custom policy must:
 1. ✅ Inherit from `BasePolicy`
 2. ✅ Implement `select_action(observation: Dict) -> np.ndarray`
 3. ✅ Return actions as `float32` numpy array
-4. ✅ Handle action dimensions: (6) single-arm or (12) dual-arm
+4. ✅ Handle action dimensions: (12) dual-arm
 
 Optional:
 - Implement `reset()` to clear temporal buffers
-
----
-
-## Quick Examples
-
-**Test with built-in policies:**
-
-```bash
-# Random policy (evaluates default garments in the release stage)
-python -m scripts.eval --policy_type custom --stage release --garment_type tops_long --num_episodes 1 --enable_cameras --device cpu
-```
-
-**Record evaluation videos:**
-
-```bash
-python -m scripts.eval \
-    --policy_type my_policy \
-    --policy_path models/my_model.pth \
-    --stage release \
-    --save_video \
-    --video_dir outputs/eval_videos \
-    --enable_cameras \
-    --device cpu
-```
 
 ---
 

@@ -110,7 +110,7 @@ lerobot-train --config_path=configs/train_<policy>.yaml
 - **Input/Output features**: Specify which observations and actions to use
 - **Training parameters**: Adjust `batch_size`, `steps`, `save_freq`, etc.
 - **Output directory**: Modify `output_dir` to save models elsewhere
-- **WandB settings**: Configure `wandb.enable` and `wandb.project`
+
 
 See [Training Guide](docs/training.md) for complete configuration examples and feature selection strategies.
 
@@ -128,7 +128,6 @@ Evaluate your trained policy on the challenge garments. The framework supports L
 python -m scripts.eval \
     --policy_type lerobot \
     --policy_path outputs/train/act_fold/checkpoints/100000/pretrained_model \
-    --stage release \
     --garment_type "tops_long" \
     --dataset_root Datasets/record/example/record_top_long_release_10/001 \
     --num_episodes 5 \
@@ -139,7 +138,6 @@ python -m scripts.eval \
 # Note: Participants can define their own model loading logic within the policy class. Provides flexibility for participants to implement specialized loading and inference logic.
 python -m scripts.eval \
     --policy_type custom \
-    --stage release \
     --garment_type "tops_long" \
     --num_episodes 5 \
     --enable_cameras \
@@ -153,13 +151,12 @@ python -m scripts.eval \
 | `--policy_type` | Policy type: `lerobot`, `custom` | `lerobot` | All |
 | `--policy_path` | Path to model checkpoint | - | **LeRobot only** |
 | `--dataset_root` | Dataset path (for metadata) | - | **LeRobot only** |
-| `--stage` | Evaluation stage: `release`, `holdout`, `all` | `release` | All |
 | `--garment_type` | Type of garments: `tops_long`, `tops_short`, `trousers_long`, `trousers_short`, `custom` | `tops_long` | All |
 | `--num_episodes` | Episodes per garment | `5` | All |
 | `--max_steps` | Max steps per episode | `600` | All |
 | `--save_video` | Save evaluation videos | `False` | All |
 | `--video_dir` | Directory to save evaluation videos | `outputs/eval_videos` | `--save_video` |
-| `--enable_cameras` | Enable camera rendering | `False` | All |
+| `--enable_cameras` | Enable camera rendering | `True` | All |
 | `--device` | Device for inference: `cpu`, `cuda` | `cuda` | All |
 | `--use_ee_pose` | Use end-effector pose control | `False` | All |
 | `--ee_urdf_path` | Robot URDF for IK solver | `Assets/robots/so101_new_calib.urdf` | `--use_ee_pose` |

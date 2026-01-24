@@ -218,13 +218,6 @@ def eval(args: argparse.Namespace, simulation_app: Any) -> None:
             "dataset_root": args.dataset_root,
             "task_description": args.task_description,
         })
-    else:
-        # Custom policy: participants can define their own loading logic
-        # policy_path is optional and only passed if provided
-        if args.policy_path:
-            policy_kwargs.update({
-                "model_path": args.policy_path,
-            })
     
     # Create policy from registry
     policy = PolicyRegistry.create(args.policy_type, **policy_kwargs)

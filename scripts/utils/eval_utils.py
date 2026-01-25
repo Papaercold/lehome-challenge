@@ -162,7 +162,8 @@ def calculate_and_print_metrics(metrics: List[Dict[str, Any]]) -> None:
     total_successes = [1 if m["success"] else 0 for m in metrics]
 
     avg_return = np.mean(total_returns)
-    std_return = np.std(total_returns)
+    # Use sample standard deviation (ddof=1) for better estimation with small samples
+    std_return = np.std(total_returns, ddof=1) if len(total_returns) > 1 else 0.0
     success_rate = np.mean(total_successes)
 
     logger.info("=" * 50)

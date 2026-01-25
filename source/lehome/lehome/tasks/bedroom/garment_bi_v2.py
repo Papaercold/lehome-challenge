@@ -38,6 +38,9 @@ class GarmentEnv(DirectRLEnv):
         self.cfg = cfg
         self.action_scale = self.cfg.action_scale
         self.object = None  # Will be created in _setup_scene
+        
+        # Cache for distance-based reward (to handle step_interval decorator)
+        self._last_computed_reward = 0.0
 
         self.garment_loader = ChallengeGarmentLoader(cfg.garment_cfg_base_path)
         self.garment_config = self.garment_loader.load_garment_config(
@@ -331,12 +334,126 @@ class GarmentEnv(DirectRLEnv):
         return pointclouds
 
     def _get_rewards(self) -> torch.Tensor:
-        success = self._check_success()
+        """Calculate distance-based reward for garment folding task.
+        
+        Reward Components:
+        1. Distance-based reward: Encourages getting closer to target distances
+        2. Success bonus: Large reward when all conditions are met
+        3. Progress reward: Partial credit for meeting some conditions
+        
+        Returns:
+            torch.Tensor: Reward value (0.0 to 1.0+)
+        """
+        # ========== Original Simple Reward (Sparse) ==========
+        # Uncomment below to use simple binary reward (0 or 1)
+        # success = self._check_success()
+        # if success:
+        #     total_reward = 1
+        # else:
+        #     total_reward = 0
+        # return total_reward
+        # =====================================================
+        
+        # ========== Distance-Based Reward (Dense) ==========
+        # Check if object is valid
+        if self.object is None:
+            return 0.0
+        if not hasattr(self.object, "_cloth_prim_view"):
+            return 0.0
+        
+        # Get detailed success check result
+        garment_type = self.garment_loader.get_garment_type(self.cfg.garment_name)
+        result = success_checker_garment_fold(self.object, garment_type)
+        
+        # Handle step_interval decorator returning False
+        if not isinstance(result, dict):
+            # Return cached reward from last computation (maintains reward continuity)
+            return self._last_computed_reward
+        
+        # Extract details
+        success = result.get("success", False)
+        details = result.get("details", {})
+        
+        # If success, return maximum reward
         if success:
-            total_reward = 1
+            self._last_computed_reward = 1.0
+            return 1.0
+        
+        # Calculate distance-based reward
+        total_reward = 0.0
+        num_conditions = len(details)
+        
+        if num_conditions == 0:
+            return 0.0
+        
+        # Calculate weighted reward based on condition type
+        # Primary conditions (<=): folding-related, higher weight
+        # Secondary conditions (>=): shape constraints, lower weight
+        primary_rewards = []
+        secondary_rewards = []
+        
+        for cond_key, cond_info in details.items():
+            value = cond_info.get("value", 0.0)
+            threshold = cond_info.get("threshold", 0.0)
+            passed = cond_info.get("passed", False)
+            
+            description = cond_info.get("description", "")
+            is_less_than = "<=" in description
+            
+            if passed:
+                condition_reward = 1.0
+            else:
+                if is_less_than:
+                    # Primary folding conditions: steep penalty when far from target
+                    if threshold > 0:
+                        excess_ratio = max(0.0, (value - threshold) / threshold)
+                        # Steeper decay for primary conditions
+                        condition_reward = np.exp(-3.0 * excess_ratio)
+                    else:
+                        condition_reward = 0.0
+                else:
+                    # Secondary shape constraints: gentler reward curve
+                    if threshold > 0:
+                        ratio = value / threshold
+                        # Less aggressive growth for secondary conditions
+                        condition_reward = max(0.0, 1.0 - np.exp(-1.5 * (1.0 - ratio)))
+                    else:
+                        condition_reward = 0.0
+            
+            if is_less_than:
+                primary_rewards.append(condition_reward)
+            else:
+                secondary_rewards.append(condition_reward)
+        
+        # Weighted combination: primary conditions dominate
+        # Only give significant reward when primary conditions are mostly satisfied
+        num_primary = len(primary_rewards)
+        num_secondary = len(secondary_rewards)
+        
+        if num_primary > 0:
+            avg_primary = sum(primary_rewards) / num_primary
+            # Use geometric mean to heavily penalize if any primary condition is bad
+            min_primary = min(primary_rewards) if primary_rewards else 0.0
+            # Combine average and minimum to ensure all primary conditions matter
+            primary_score = (avg_primary ** 0.7) * (min_primary ** 0.3)
         else:
-            total_reward = 0
-        return total_reward
+            primary_score = 1.0
+        
+        if num_secondary > 0:
+            avg_secondary = sum(secondary_rewards) / num_secondary
+            secondary_score = avg_secondary
+        else:
+            secondary_score = 1.0
+        
+        # Final reward: primary conditions weighted heavily (80%), secondary (20%)
+        # Scale to [0, 0.9] to reserve 1.0 for success
+        final_reward = (0.8 * primary_score + 0.2 * secondary_score) * 0.9
+        
+        # Cache the computed reward for non-check steps
+        self._last_computed_reward = float(final_reward)
+        
+        return float(final_reward)
+        # ===================================================
 
     def _get_dones(self) -> tuple[torch.Tensor, torch.Tensor]:
         time_out = self.episode_length_buf >= self.max_episode_length - 1
@@ -348,9 +465,6 @@ class GarmentEnv(DirectRLEnv):
             return False
 
         if not hasattr(self.object, "_cloth_prim_view"):
-            return False
-
-        if not hasattr(self.object._cloth_prim_view, "_max_particles_per_cloth"):
             return False
 
         garment_type = self.garment_loader.get_garment_type(self.cfg.garment_name)
@@ -366,11 +480,6 @@ class GarmentEnv(DirectRLEnv):
             success = False
             result = None
         elif not hasattr(self.object, "_cloth_prim_view"):
-            success = False
-            result = None
-        elif self.object._device != "cpu" and not hasattr(
-            self.object._cloth_prim_view, "_max_particles_per_cloth"
-        ):
             success = False
             result = None
         else:
@@ -409,6 +518,9 @@ class GarmentEnv(DirectRLEnv):
         if env_ids is None:
             env_ids = self.left_arm._ALL_INDICES
         super()._reset_idx(env_ids)
+        
+        # Reset cached reward on episode reset
+        self._last_computed_reward = 0.0
 
         left_joint_pos = self.left_arm.data.default_joint_pos[env_ids]
         right_joint_pos = self.right_arm.data.default_joint_pos[env_ids]

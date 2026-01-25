@@ -393,13 +393,6 @@ def setup_eval_parser() -> argparse.ArgumentParser:
         "--seed", type=int, default=42, help="Seed for the environment."
     )
     parser.add_argument(
-        "--stage",
-        type=str,
-        default="release",
-        choices=["release", "holdout", "all"],
-        help="Evaluation stage. 'release' and 'holdout' load garment list from file. 'all' evaluates all the garments.",
-    )
-    parser.add_argument(
         "--garment_type",
         type=str,
         default="tops_long",

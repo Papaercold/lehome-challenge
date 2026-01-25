@@ -86,11 +86,15 @@ from .my_policy import MyPolicy
 ```bash
 python -m scripts.eval \
     --policy_type custom \
+    --policy_path "path/to/your/model" \
     --garment_type "tops_long" \
     --num_episodes 5 \
     --enable_cameras \
     --device cpu
 ```
+
+**Testing Single Garments:**
+To evaluate a specific garment instead of a whole category, add the garment name to `Assets/objects/Challenge_Garment/Release/Release_test_list.txt` and run the script with `--garment_type custom`.
 
 ---
 

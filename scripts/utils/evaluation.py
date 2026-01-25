@@ -111,12 +111,25 @@ def run_evaluation_loop(
             # 6. Step Environment
             env.step(action)
             
-            # Check success
+            # Check success first
             if not success_flag:
                 success = env._get_success()
                 if success.item():
                     success_flag = True
                     extra_steps = 50 # Run a bit longer after success to settle
+            
+            # Get reward from environment (Isaac Lab stores rewards internally)
+            reward_value = env._get_rewards()
+            if isinstance(reward_value, torch.Tensor):
+                reward = reward_value.item()
+            else:
+                reward = float(reward_value)
+            
+            # Accumulate reward for all steps (including post-success steps)
+            episode_return += reward
+            # Only count length before success (for consistency with episode termination)
+            if not success_flag:
+                episode_length += 1
 
             # Update Observation
             observation_dict = env._get_observations()
@@ -131,12 +144,6 @@ def run_evaluation_loop(
                 for key, val in observation_dict.items():
                     if "images" in key:
                         episode_frames[key].append(val.copy())
-
-            # Metrics
-            reward = env.reward.item() if hasattr(env, "reward") else 0.0
-            if not success_flag:
-                episode_return += reward
-                episode_length += 1
 
             if success_flag:
                 extra_steps -= 1
@@ -202,10 +209,13 @@ def eval(args: argparse.Namespace, simulation_app: Any) -> None:
         )
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    is_bimanual = "Bi" in args.task or "bi" in args.task.lower()
     
     # Create policy instance from registry with appropriate arguments
     # Different policies may require different initialization arguments
-    policy_kwargs = {"device": device}
+    policy_kwargs = {
+        "device": device,
+    }
     
     if args.policy_type == "lerobot":
         # LeRobot policy requires policy_path and dataset_root
@@ -218,6 +228,10 @@ def eval(args: argparse.Namespace, simulation_app: Any) -> None:
             "dataset_root": args.dataset_root,
             "task_description": args.task_description,
         })
+    else:
+        # For custom policies, pass policy_path as model_path if provided
+        if args.policy_path:
+            policy_kwargs["model_path"] = args.policy_path
     
     # Create policy from registry
     policy = PolicyRegistry.create(args.policy_type, **policy_kwargs)
@@ -225,7 +239,6 @@ def eval(args: argparse.Namespace, simulation_app: Any) -> None:
 
     # 3. Initialize IK Solver (If needed)
     ee_solver = None
-    is_bimanual = "Bi" in args.task or "bi" in args.task.lower()
     if args.use_ee_pose:
         from lehome.utils import RobotKinematics
         urdf_path = args.ee_urdf_path # Assuming path is handled or add check logic
@@ -234,55 +247,73 @@ def eval(args: argparse.Namespace, simulation_app: Any) -> None:
         logger.info(f"IK solver loaded.")
 
     # 4. Load Evaluation List
-    stage_capitalized = args.stage.capitalize()  # Capitalize first letter: release -> Release, holdout -> Holdout
+    # Only loads from 'Release' directory based on garment_type
+    eval_list = [] # List of (name, stage)
+    
+    # Evaluate a specific category based on garment_type
     if args.garment_type == "custom":
-        # Default behavior: loads Release_test_list.txt
-        list_filename = f"{stage_capitalized}_test_list.txt"
+        # For 'custom' type, we load from the root Release_test_list.txt
+        eval_list_path = os.path.join(
+            args.garment_cfg_base_path,
+            "Release",
+            "Release_test_list.txt"
+        )
     else:
-        # Map argument to filename
+        # Map argument to specific sub-category directory
         type_map = {
             "tops_long": "Tops_Long",
             "tops_short": "Tops_Short",
             "trousers_long": "Trousers_Long",
             "trousers_short": "Trousers_Short"
         }
-        # Get filename prefix, fallback to Tops_Long if something unexpected happens
         file_prefix = type_map.get(args.garment_type, "Tops_Long")
-        list_filename = f"{file_prefix}/{file_prefix}.txt"
+        # Path: Assets/objects/Challenge_Garment/Release/Tops_Long/Tops_Long.txt
+        eval_list_path = os.path.join(
+            args.garment_cfg_base_path,
+            "Release",
+            file_prefix,
+            f"{file_prefix}.txt"
+        )
 
-    eval_list_path = os.path.join(
-        args.garment_cfg_base_path,
-        stage_capitalized,
-        list_filename
-    )
-    logger.info(f"Loading evaluation list from: {eval_list_path}")
+    logger.info(f"Loading evaluation list for category '{args.garment_type}' from: {eval_list_path}")
     
+    if not os.path.exists(eval_list_path):
+        raise FileNotFoundError(f"Evaluation list not found: {eval_list_path}")
+
     with open(eval_list_path, "r") as f:
-        eval_list = [line.strip() for line in f.readlines()]
-    logger.info(f"Stage {args.stage}: loaded {len(eval_list)} garments")
-        
+        names = [line.strip() for line in f.readlines() if line.strip()]
+        for name in names:
+            eval_list.append((name, "Release"))
+    
+    logger.info(f"Loaded {len(eval_list)} garments for category: {args.garment_type}")
+
+    if not eval_list:
+        raise ValueError(f"No garments found to evaluate for category '{args.garment_type}'.")
+
     # 5. Main Evaluation Loops
     all_garment_metrics = []
     
     # Init Env with first garment
-    env_cfg.garment_name = eval_list[0]
-    env_cfg.garment_version = args.stage.capitalize()
+    first_name, first_stage = eval_list[0]
+    env_cfg.garment_name = first_name
+    env_cfg.garment_version = first_stage
     env = gym.make(args.task, cfg=env_cfg).unwrapped
     env.initialize_obs()
 
     try:
-        for garment_idx, garment_name in enumerate(eval_list):
-            logger.info(f"Evaluating: {garment_name} ({garment_idx+1}/{len(eval_list)})")
+        for garment_idx, (garment_name, garment_stage) in enumerate(eval_list):
+            logger.info(f"Evaluating: {garment_name} ({garment_stage}) ({garment_idx+1}/{len(eval_list)})")
             
             # Switch Garment Logic
             if garment_idx > 0:
                 if hasattr(env, "switch_garment"):
-                    env.switch_garment(garment_name, args.stage.capitalize())
+                    env.switch_garment(garment_name, garment_stage)
                     env.reset()
                     policy.reset()
                 else:
                     env.close()
                     env_cfg.garment_name = garment_name
+                    env_cfg.garment_version = garment_stage
                     env = gym.make(args.task, cfg=env_cfg).unwrapped
                     env.initialize_obs()
                     policy.reset()
@@ -311,26 +342,33 @@ def eval(args: argparse.Namespace, simulation_app: Any) -> None:
         # Aggregate all episode metrics
         all_episodes = []
         for garment_data in all_garment_metrics:
+            # Validate metrics exist before processing
+            if not garment_data.get("metrics"):
+                logger.warning(f"No metrics found for garment: {garment_data.get('garment_name', 'Unknown')}")
+                continue
             for episode_metric in garment_data["metrics"]:
                 episode_metric["garment_name"] = garment_data["garment_name"]
                 all_episodes.append(episode_metric)
 
-        # Print overall metrics
-        calculate_and_print_metrics(all_episodes)
+        # Check if we have any valid episodes to report
+        if not all_episodes:
+            logger.warning("No valid episode metrics collected")
+        else:
+            # Print overall metrics
+            calculate_and_print_metrics(all_episodes)
 
-        # Print per-garment summary
-        logger.info("=" * 60)
-        logger.info("Per-Garment Summary")
-        logger.info("=" * 60)
-        for garment_data in all_garment_metrics:
-            garment_name = garment_data["garment_name"]
-            metrics = garment_data["metrics"]
-            success_count = sum(1 for m in metrics if m["success"])
-            success_rate = success_count / len(metrics) if metrics else 0.0
-            avg_return = np.mean([m["return"] for m in metrics]) if metrics else 0.0
-            logger.info(
-                f"  {garment_name}: Success Rate = {success_rate:.2%}, Avg Return = {avg_return:.2f}"
-            )
+            # Print per-garment summary using calculate_and_print_metrics
+            logger.info("=" * 60)
+            logger.info("Per-Garment Summary")
+            logger.info("=" * 60)
+            for garment_data in all_garment_metrics:
+                garment_name = garment_data["garment_name"]
+                metrics = garment_data.get("metrics", [])
+                if metrics:
+                    logger.info(f"\nGarment: {garment_name}")
+                    calculate_and_print_metrics(metrics)
+                else:
+                    logger.warning(f"  {garment_name}: No metrics available")
     else:
         logger.info("No metrics collected (all evaluations failed)")
 

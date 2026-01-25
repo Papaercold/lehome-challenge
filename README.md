@@ -159,7 +159,7 @@ python -m scripts.eval \
 | Parameter | Description | Default | Required For |
 |-----------|-------------|---------|--------------|
 | `--policy_type` | Policy type: `lerobot`, `custom` | `lerobot` | All |
-| `--policy_path` | Path to model checkpoint | - | **LeRobot only** |
+| `--policy_path` | Path to model checkpoint | - | All (passed as `model_path` for custom) |
 | `--dataset_root` | Dataset path (for metadata) | - | **LeRobot only** |
 | `--garment_type` | Type of garments: `tops_long`, `tops_short`, `trousers_long`, `trousers_short`, `custom` | `tops_long` | All |
 | `--num_episodes` | Episodes per garment | `5` | All |
@@ -174,13 +174,14 @@ python -m scripts.eval \
 **Parameter Descriptions:**
 
 * **Required for LeRobot Policy**: `--policy_path` (model path) and `--dataset_root` (dataset path, used for loading metadata).
-* **Custom Policy**: `--policy_path` is not required; participants are free to define their own model loading logic within their policy class (refer to `scripts/eval_policy/example_participant_policy.py`).
+* **Custom Policy**: `--policy_path` is passed to the policy constructor as `model_path`. Participants can define their own model loading logic (refer to `scripts/eval_policy/example_participant_policy.py`).
 
 
 #### Garment Test Configuration
-Under the directory `Assets/objects/Challenge_Garment/Release`, each garment category folder contains a corresponding text file listing the garment names (e.g., `Tops_Long/Tops_Long.txt` contains Top_Long_Seen_0, Top_Long_Seen_1, etc.). You can set --garment_type to `tops_long` to evaluate all garments within the `Tops_Long` category. The same logic applies to all other garment types.
+Evaluation is performed on the `Release` set of garments. Under the directory `Assets/objects/Challenge_Garment/Release`, each garment category folder contains a corresponding text file listing the garment names (e.g., `Tops_Long/Tops_Long.txt`).
 
-To test a specific subset of garments, you can modify `Assets/objects/Challenge_Garment/Release/Release_test_list.txt` by including only the target garment names according to `Tops_Long.txt`, `Tops_Short.txt`, `Trousers_Long.txt`, `Trousers_Short.txt`.
+*   **Evaluate a Category**: Set `--garment_type` to `tops_long`, `tops_short`, `trousers_long`, or `trousers_short` to evaluate all garments within that category.
+*   **Evaluate Specific Garments**: Edit `Assets/objects/Challenge_Garment/Release/Release_test_list.txt` to include only the garments you want to test, then run with `--garment_type custom`.
 
 > 📖 **For detailed policy integration guide**, see [scripts/eval_policy/POLICY_GUIDE.md](scripts/eval_policy/POLICY_GUIDE.md)
 

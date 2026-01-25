@@ -11,9 +11,9 @@ Evaluate trained LeRobot models (ACT, Diffusion Policy, SmolVLA):
 ```bash
 python -m scripts.eval \
     --policy_type lerobot \
-    --policy_path outputs/train/act_fold/checkpoints/100000/pretrained_model \
+    --policy_path outputs/train/act \
     --garment_type "tops_long" \
-    --dataset_root Datasets/record/example/record_top_long_release_10/001 \
+    --dataset_root Datasets/example/top_long \
     --num_episodes 5 \
     --enable_cameras \
     --device cpu

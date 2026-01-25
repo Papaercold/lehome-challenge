@@ -264,7 +264,7 @@ Replay recorded datasets for visualization, verification, or data augmentation. 
 
 ```bash
 python -m scripts.dataset_sim replay \
-    --dataset_root Datasets/record/001 \
+    --dataset_root Datasets/record/example/record_top_long_release_10/001 \
     --num_replays 1 \
     --disable_depth \
     --device "cpu" \
@@ -277,7 +277,7 @@ python -m scripts.dataset_sim replay \
 |-----------|------|---------|-------------|
 | `--task` | str | `LeHome-BiSO101-Direct-Garment-v2` | Task environment name |
 | `--dataset_root` | str | `Datasets/record/001` | Input dataset directory |
-| `--output_root` | str | `None` | Output directory (None = no saving, only visualization) |
+| `--output_root` | str | `None` | Output directory (Should be specified (e.g, `Datasets/replay_stored/example/record_top_long_release_10`) if `--save_successful_only` is true) |
 | `--num_replays` | int | `1` | Number of replays per episode |
 | `--save_successful_only` | flag | `False` | Only save episodes that achieve success |
 | `--start_episode` | int | `0` | Starting episode index (inclusive) |
@@ -286,8 +286,6 @@ python -m scripts.dataset_sim replay \
 | `--use_random_seed` | flag | `False` | Use random seed (no fixed seed) |
 | `--seed` | int | `42` | Random seed for environment (ignored if `--use_random_seed` is set) |
 | `--task_description` | str | `fold the garment on the table` | Task description string |
-| `--garment_name` | str | `Top_Long_Unseen_0` | Name of the garment |
-| `--garment_version` | str | `Release` | Version of the garment: `Release` or `Holdout` |
 | `--garment_cfg_base_path` | str | `Assets/objects/Challenge_Garment` | Base path of the garment configuration |
 | `--particle_cfg_path` | str | `source/lehome/lehome/tasks/bedroom/config_file/particle_garment_cfg.yaml` | Path of the particle configuration |
 | `--disable_depth` | flag | `False` | Disable depth observation (faster replay) |

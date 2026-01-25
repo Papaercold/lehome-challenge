@@ -3,6 +3,7 @@
 import argparse
 import json
 from pathlib import Path
+import shutil
 from typing import Dict, Optional, Tuple, Any
 import gymnasium as gym
 import numpy as np
@@ -112,6 +113,39 @@ def load_dataset(dataset_root: str) -> LeRobotDataset:
         raise
 
 
+def get_garment_name_from_json(dataset_root: str) -> str:
+    """
+    Parse garment_info.json to retrieve the garment name (the top-level key).
+    
+    Args:
+        dataset_root: Root directory of the dataset.
+        
+    Returns:
+        The name of the garment (e.g., 'Top_Long_Seen_0').
+    """
+    pose_file = Path(dataset_root) / "meta" / "garment_info.json"
+    
+    if not pose_file.exists():
+        # Fallback for older jsonl format if necessary, though user specified json
+        raise FileNotFoundError(f"Garment info file not found: {pose_file}")
+
+    try:
+        with open(pose_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            
+        if not data:
+            raise ValueError(f"Garment info file is empty: {pose_file}")
+            
+        # Get the first key in the dictionary (e.g., "Top_Long_Seen_0")
+        # Assuming the dataset contains one type of garment or the first one is the target.
+        garment_name = list(data.keys())[0]
+        return garment_name
+        
+    except Exception as e:
+        logger.error(f"Failed to extract garment name from {pose_file}: {e}")
+        raise
+
+
 def load_initial_pose(
     dataset_root: str, episode_index: int
 ) -> Optional[Dict[str, Any]]:
@@ -184,7 +218,13 @@ def create_replay_dataset(
         return None, None
 
     output_path = Path(args.output_root)
-    root = get_next_experiment_path_with_gap(output_path)
+    source_folder_name = Path(args.dataset_root).name  # 获取 "005"
+    root = output_path / source_folder_name
+    if root.exists():
+        logger.warning(f"Target path {root} already exists. Deleting it to create a fresh replay dataset.")
+        shutil.rmtree(root)
+    if not output_path.exists():
+        output_path.mkdir(parents=True, exist_ok=True)
 
     # Use the same features as the source dataset
     features = source_dataset.meta.features
@@ -511,8 +551,14 @@ def replay(args: argparse.Namespace) -> None:
     logger.info(f"Creating environment: {args.task}")
     env_cfg = parse_env_cfg(args.task, device=device)
 
-    # Set garment configuration (same as record)
-    env_cfg.garment_name = args.garment_name
+    # Set garment configuration
+    try:
+        detected_garment_name = get_garment_name_from_json(args.dataset_root)
+        logger.info(f"Auto-detected garment name from json: {detected_garment_name}")
+        env_cfg.garment_name = detected_garment_name
+    except Exception as e:
+        logger.error(f"Could not determine garment name from dataset: {e}")
+        raise
     env_cfg.garment_version = args.garment_version
     env_cfg.garment_cfg_base_path = args.garment_cfg_base_path
     env_cfg.particle_cfg_path = args.particle_cfg_path

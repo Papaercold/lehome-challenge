@@ -43,10 +43,11 @@
 
 ## 🚀 Quick Start
 
-> ⚠️ **IMPORTANT**: Before starting, you must download the simulation assets and example datasets from HuggingFace. See [Step 2: Assets & Data Preparation](#2-assets--data-preparation) for instructions.
+> ⚠️ **IMPORTANT**: 
+> For Ubuntu version and GPU-related settings, please refer to the [IsaacSim 5.1.0 Documentation](https://docs.isaacsim.omniverse.nvidia.com/5.1.0/installation/requirements.html).
 
 ### 1. Installation
-We offer two installation methods: Docker and UV, for submission and local evaluation, respectively.
+We offer two installation methods: Docker and UV for submission and local evaluation.
 
 #### Use Docker
 
@@ -54,7 +55,7 @@ We offer two installation methods: Docker and UV, for submission and local evalu
 
 #### Use UV
 
-The LeHome competition environment is based on the IssacLab and LeRobot repositories; please refer to [UV installation guide](docs/installation.md).
+The simulation environment is based on the IssacLab and LeRobot repositories; please refer to [UV installation guide](docs/installation.md).
 
 ### 2. Assets & Data Preparation
 
@@ -81,11 +82,8 @@ If you need depth information or individual data for each garment. Download from
 hf download lehome/dataset_challenge --repo-type dataset --local-dir Datasets/example
 ```
 
-If you need to collect additional data yourself (using SO101 Leader is strongly recommended).
-
 #### Collect Your Own Data
-
-For detailed instructions on teleoperation data collection and dataset processing, please refer to our [Dataset Collection and Processing Guide](docs/datasets.md).
+For detailed instructions on teleoperation data collection and dataset processing, please refer to our [Dataset Collection and Processing Guide](docs/datasets.md) ( using SO101 Leader is strongly recommended).
 
 ### 3. Train
 
@@ -169,7 +167,7 @@ Evaluation is performed on the `Release` set of garments. Under the directory `A
 *   **Evaluate a Category**: Set `--garment_type` to `tops_long`, `tops_short`, `trousers_long`, or `trousers_short` to evaluate all garments within that category.
 *   **Evaluate Specific Garments**: Edit `Assets/objects/Challenge_Garment/Release/Release_test_list.txt` to include only the garments you want to test, then run with `--garment_type custom`.
 
-> 📖 **For detailed policy integration guide**, see [scripts/eval_policy/POLICY_GUIDE.md](scripts/eval_policy/POLICY_GUIDE.md)
+> 📖 **For detailed policy evaluation guide**, see [eval_guide](docs/policy_eval.md).
 
 
 ## 📮 Submission

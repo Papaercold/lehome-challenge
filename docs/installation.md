@@ -6,7 +6,7 @@ This guide provides step-by-step instructions for manually installing the LeHome
 
 - Python 3.11
 - [uv](https://github.com/astral-sh/uv) package manager
-- The GPU driver and CUDA follow the official IsaacLab tutorial.
+- GPU driver and CUDA supporting IsaacSim5.1.0.
 
 ## Installation Steps
 
@@ -58,5 +58,5 @@ Now that you have installed the environment, you can:
 
 - [Prepare Assets and Data](datasets.md)
 - [Start Training](training.md)
-- [Evaluate Policies](../scripts/eval_policy/POLICY_GUIDE.md)
+- [Evaluate Policies](policy_eval.md)
 - [Back to README](../README.md)

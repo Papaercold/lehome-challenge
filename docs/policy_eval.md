@@ -1,6 +1,6 @@
-# Policy Integration Guide
+# Policy Evaluation Guide
 
-Quick guide for evaluating policies in the LeHome Challenge.
+We provide both LeRobot policy formats and custom policy formats.
 
 ---
 
@@ -155,4 +155,4 @@ def select_action(self, observation):
 
 ---
 
-For more help, visit [LeHome Challenge](https://lehome-challenge.com/).
+For more help, contact us [LeHome Challenge](https://lehome-challenge.com/).

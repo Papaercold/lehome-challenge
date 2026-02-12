@@ -53,6 +53,44 @@ def run_evaluation_loop(
         # Or you can expose policy.meta if available.
         # Here we initialize vaguely to keep it simple.
         root_path = Path(args.eval_dataset_path)
+        aligned_features = {
+            "observation.state": {
+                "dtype": "float32",
+                "shape": (12,),
+                "names": [
+                    "left_shoulder_pan", "left_shoulder_lift", "left_elbow_flex",
+                    "left_wrist_flex", "left_wrist_roll", "left_gripper",
+                    "right_shoulder_pan", "right_shoulder_lift", "right_elbow_flex",
+                    "right_wrist_flex", "right_wrist_roll", "right_gripper"
+                ],
+            },
+            "action": {
+                "dtype": "float32",
+                "shape": (12,),
+                "names": [
+                    "left_shoulder_pan", "left_shoulder_lift", "left_elbow_flex",
+                    "left_wrist_flex", "left_wrist_roll", "left_gripper",
+                    "right_shoulder_pan", "right_shoulder_lift", "right_elbow_flex",
+                    "right_wrist_flex", "right_wrist_roll", "right_gripper"
+                ],
+            },
+            # 定义三路摄像头，必须与 info.json 里的 key 完全一致
+            "observation.images.top_rgb": {
+                "dtype": "video",
+                "shape": (480, 640, 3),
+                "names": ["height", "width", "channels"],
+            },
+            "observation.images.left_rgb": {
+                "dtype": "video",
+                "shape": (480, 640, 3),
+                "names": ["height", "width", "channels"],
+            },
+            "observation.images.right_rgb": {
+                "dtype": "video",
+                "shape": (480, 640, 3),
+                "names": ["height", "width", "channels"],
+            }
+        }
         eval_dataset = LeRobotDataset.create(
             repo_id="lehome_eval",
             fps=args.step_hz,
@@ -60,7 +98,7 @@ def run_evaluation_loop(
             use_videos=True,
             image_writer_threads=8,
             image_writer_processes=0,
-            features=None,  # Let LeRobot infer or pass explicitly if needed
+            features=aligned_features,
         )
         json_path = eval_dataset.root / "meta" / "garment_info.json"
 
@@ -154,6 +192,11 @@ def run_evaluation_loop(
                     if k != "observation.top_depth"
                 }
                 frame["task"] = args.task_description
+                # 在 eval_dataset.add_frame(frame) 之前加入
+                if st == 0: # 只打印第一帧
+                    print(f"DEBUG: 实际环境返回的 Key: {list(observation_dict.keys())}")
+                    print(f"DEBUG: 数据集定义的 Key: {list(eval_dataset.features.keys())}")
+                    
                 eval_dataset.add_frame(frame)
 
             if args.save_video:
@@ -173,6 +216,8 @@ def run_evaluation_loop(
         if args.save_datasets:
             if success_flag:
                 eval_dataset.save_episode()
+                import time
+                time.sleep(3)
                 append_episode_initial_pose(
                     json_path,
                     episode_index,
@@ -356,7 +401,6 @@ def eval(args: argparse.Namespace, simulation_app: Any) -> None:
                     env = gym.make(args.task, cfg=env_cfg).unwrapped
                     env.initialize_obs()
                     policy.reset()
-
             # Run Loop
             metrics = run_evaluation_loop(
                 env=env,

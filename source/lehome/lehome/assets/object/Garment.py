@@ -50,7 +50,7 @@ class GarmentObject(SingleClothPrim):
             particle_config: Particle system configuration (YAML).
             garment_config: Garment-specific configuration (JSON).
             rng: Optional random number generator (RandomState). If None, uses global random module.
-                 This allows for reproducible random initialization when a fixed seed is used.
+                This allows for reproducible random initialization when a fixed seed is used.
 
             1. set pos and ori for garment object
             2. create physics material and visual material for garment object

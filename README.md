@@ -26,8 +26,8 @@
 - [📑 Table of Contents](#-table-of-contents)
 - [🚀 Quick Start](#-quick-start)
   - [1. Installation](#1-installation)
-    - [Use Docker](#use-docker)
     - [Use UV](#use-uv)
+    - [Use Docker](#use-docker)
   - [2. Assets \& Data Preparation](#2-assets--data-preparation)
     - [Download Simulation Assets](#download-simulation-assets)
     - [Download Example Dataset](#download-example-dataset)
@@ -39,23 +39,22 @@
     - [Garment Test Configuration](#garment-test-configuration)
 - [📮 Submission](#-submission)
 - [🧩 Acknowledgments](#-acknowledgments)
-- [🖊️ Citation](#️-citation)
 
 ## 🚀 Quick Start
 
 > ⚠️ **IMPORTANT**: 
-> For Ubuntu version and GPU-related settings, please refer to the [IsaacSim 5.1.0 Documentation](https://docs.isaacsim.omniverse.nvidia.com/5.1.0/installation/requirements.html).
+> For Ubuntu version and GPU-related settings, please refer to the [IsaacSim 5.1.0 Documentation](https://docs.isaacsim.omniverse.nvidia.com/5.1.0/installation/requirements.html). And the simulation currently only supports CPU devices.
 
 ### 1. Installation
-We offer two installation methods: Docker and UV for submission and local evaluation.
-
-#### Use Docker
-
-***Docker is not ready yet; please use uv for Installation for now.***
+We offer two installation methods: UV and Docker for submission and local evaluation.
 
 #### Use UV
 
 The simulation environment is based on the IssacLab and LeRobot repositories; please refer to [UV installation guide](docs/installation.md).
+
+#### Use Docker
+
+***Docker is not ready yet; please use uv for Installation for now.***
 
 ### 2. Assets & Data Preparation
 
@@ -122,17 +121,17 @@ Evaluate your trained policy on the challenge garments. The framework supports L
 python -m scripts.eval \
     --policy_type lerobot \
     --policy_path outputs/train/act_top_long/checkpoints/last/pretrained_model \
-    --garment_type "tops_long" \
+    --garment_type "top_long" \
     --dataset_root Datasets/example/top_long_merged \
     --num_episodes 2 \
     --enable_cameras \
-    --device cpu
+    --device cpu    
 
 # Evaluate custom policy
 # Note: Participants can define their own model loading logic within the policy class. Provides flexibility for participants to implement specialized loading and inference logic.
 python -m scripts.eval \
     --policy_type custom \
-    --garment_type "tops_long" \
+    --garment_type "top_long" \
     --num_episodes 5 \
     --enable_cameras \
     --device cpu
@@ -145,15 +144,14 @@ python -m scripts.eval \
 | `--policy_type` | Policy type: `lerobot`, `custom` | `lerobot` | All |
 | `--policy_path` | Path to model checkpoint | - | All (passed as `model_path` for custom) |
 | `--dataset_root` | Dataset path (for metadata) | - | **LeRobot only** |
-| `--garment_type` | Type of garments: `tops_long`, `tops_short`, `trousers_long`, `trousers_short`, `custom` | `tops_long` | All |
+| `--garment_type` | Type of garments: `top_long`, `top_short`, `pant_long`, `pant_short`, `custom` | `top_long` | All |
 | `--num_episodes` | Episodes per garment | `5` | All |
 | `--max_steps` | Max steps per episode | `600` | All |
-| `--save_video` | Save evaluation videos | `False` | All |
+| `--save_video` | Save evaluation videos | | All |
 | `--video_dir` | Directory to save evaluation videos | `outputs/eval_videos` | `--save_video` |
-| `--enable_cameras` | Enable camera rendering | `True` | All |
-| `--device` | Device for inference: `cpu`, `cuda` | `cuda` | All |
-| `--use_ee_pose` | Use end-effector pose control | `False` | All |
-| `--ee_urdf_path` | Robot URDF for IK solver | `Assets/robots/so101_new_calib.urdf` | `--use_ee_pose` |
+| `--enable_cameras` | Enable camera rendering | | All |
+| `--device` | Device for inference: only `cpu` |'cpu'| All |
+| `--headless` | Used for evaluation without GUI | disabled | All |
 
 **Parameter Descriptions:**
 
@@ -162,9 +160,9 @@ python -m scripts.eval \
 
 
 #### Garment Test Configuration
-Evaluation is performed on the `Release` set of garments. Under the directory `Assets/objects/Challenge_Garment/Release`, each garment category folder contains a corresponding text file listing the garment names (e.g., `Tops_Long/Tops_Long.txt`).
+Evaluation is performed on the `Release` set of garments. Under the directory `Assets/objects/Challenge_Garment/Release`, each garment category folder contains a corresponding text file listing the garment names (e.g., `Top_Long/Top_Long.txt`).
 
-*   **Evaluate a Category**: Set `--garment_type` to `tops_long`, `tops_short`, `trousers_long`, or `trousers_short` to evaluate all garments within that category.
+*   **Evaluate a Category**: Set `--garment_type` to `top_long`, `top_short`, `pant_long`, or `pant_short` to evaluate all garments within that category.
 *   **Evaluate Specific Garments**: Edit `Assets/objects/Challenge_Garment/Release/Release_test_list.txt` to include only the garments you want to test, then run with `--garment_type custom`.
 
 > 📖 **For detailed policy evaluation guide**, see [eval_guide](docs/policy_eval.md).
@@ -184,18 +182,3 @@ This project stands on the shoulders of giants. We utilize and build upon the fo
 - **[Isaac Lab](https://isaac-sim.github.io/IsaacLab/main/index.html)** - For modular robot learning environments
 - **[LeRobot](https://github.com/huggingface/lerobot)** - For state-of-the-art Imitation Learning algorithms
 - **[Marble](https://marble.worldlabs.ai/)** - For diverse simulation scene generation
-
-## 🖊️ Citation
-
-If you use this framework for your research or participate in the competition, please cite our work:
-
-```bibtex
-@inproceedings{
-li2025lehome,
-title={LeHome: A Simulation Environment for Deformable Object Manipulation in Household Scenarios},
-author={Zeyi Li and Jade Yang and Jingkai Xu and Shangbin Xie and Yuran Wang and Zhenhao Shen and Tianxing Chen and Yan Shen and Wenjun Li and Yukun Zheng and Chaorui Zhang and Ming Chen and Chen Xie and Ruihai Wu},
-booktitle={IROS 2025 - 5th Workshop on RObotic MAnipulation of Deformable Objects: holistic approaches and challenges forward},
-year={2025},
-url={https://openreview.net/forum?id=rEDd1HorJl}
-}
-```

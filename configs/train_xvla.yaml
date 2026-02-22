@@ -1,0 +1,115 @@
+dataset:
+  repo_id: repo_xvla
+  root: Datasets/example/top_long_merged
+
+policy:
+  type: xvla
+  # 从官方预训练权重微调（而非从头训练）
+  # 首次运行时会自动从 HuggingFace 下载 ~3.5GB 权重
+  pretrained_path: lerobot/xvla-base
+  device: cuda
+  push_to_hub: false
+
+  input_features:
+    observation.state:
+      type: STATE
+      shape: [12]
+    observation.images.top_rgb:
+      type: VISUAL
+      shape: [3, 480, 640]
+    observation.images.left_rgb:
+      type: VISUAL
+      shape: [3, 480, 640]
+    observation.images.right_rgb:
+      type: VISUAL
+      shape: [3, 480, 640]
+
+  output_features:
+    action:
+      type: ACTION
+      shape: [12]
+
+  # SO101 双臂专用 action space：原生支持 12D 关节空间
+  # 内部会在 12D 真实动作 + 8D 哑元 padding 之间自动转换
+  action_mode: so101_bimanual
+
+  # 每次预测的动作序列长度
+  chunk_size: 32
+  n_action_steps: 32
+
+  # 本体感知（关节状态）输入
+  use_proprio: true
+
+  # 3 路摄像头：top + left_wrist + right_wrist
+  num_image_views: 3
+
+  # Florence-2 视觉编码器只支持正方形输入（内部 assert h*w == num_tokens）
+  # Transformer 位置编码上限 max_len_seq=512（来自 checkpoint，不可改大）
+  # 序列 = cam0(H/32)²+64(text) + cam1+2(H/32)²×2 + 32(action) + 32(soft_prompt)
+  # 320x320: 100+64 + 200 + 64 = 428 < 512 ✓ （裕量充足）
+  resize_imgs_with_padding: [320, 320]
+
+  # Florence-2 Large 骨干架构配置（微调时也必须填写，描述架构而非权重）
+  # 实际权重由 pretrained_path 加载，此处仅用于初始化模型结构
+  florence_config:
+    projection_dim: 1024
+    vocab_size: 51289
+    vision_config:
+      projection_dim: 1024
+      # max_pos_embeddings=50 必须与预训练 checkpoint 一致（默认 1000 会导致形状不匹配）
+      image_pos_embed:
+        type: learned_abs_2d
+        max_pos_embeddings: 50
+    text_config:
+      d_model: 1024
+      encoder_layers: 12
+      encoder_ffn_dim: 4096
+      encoder_attention_heads: 16
+      decoder_layers: 12
+      decoder_ffn_dim: 4096
+      decoder_attention_heads: 16
+      vocab_size: 51289
+      # max_position_embeddings=4096 必须与预训练 checkpoint 一致（默认 1024 会导致形状不匹配）
+      max_position_embeddings: 4096
+
+  # max_state_dim=20 必须与预训练 checkpoint 一致
+  # action_encoder input_size = dim_action(20) + dim_time(32) + max_state_dim(20) = 72
+  # （默认 32 会导致 86016 vs 73728 形状不匹配）
+  max_state_dim: 20
+
+  # Tokenizer（与 Florence-2 配套的 BART tokenizer）
+  tokenizer_name: facebook/bart-large
+  tokenizer_max_length: 64
+
+  # Transformer action head 架构参数
+  hidden_size: 1024
+  depth: 24
+  num_heads: 16
+  num_domains: 30
+  len_soft_prompts: 32
+
+  # 推理时扩散步数（越少越快，精度略降）
+  num_denoising_steps: 10
+
+  # 学习率调度（必须与 steps 同步，否则 LR 提前衰减到底）
+  scheduler_warmup_steps: 1000
+  scheduler_decay_steps: 100000
+
+  # 微调策略：H100 全量微调（解冻 VLM，差分 LR 自动保护：VLM 用 1/10 LR）
+  # VRAM 预算：~34GB（H100 80GB 完全够用）
+  freeze_vision_encoder: false
+  freeze_language_encoder: false
+  train_policy_transformer: true
+  train_soft_prompts: true
+
+  # 数值精度：bfloat16（H100 tensor core 专门优化，比 float32 快 2x，动态范围与 float32 相同）
+  dtype: bfloat16
+
+output_dir: outputs/train/xvla_finetune_top_long_h100
+batch_size: 32
+steps: 100000
+save_freq: 10000
+log_freq: 1000
+
+wandb:
+  enable: false

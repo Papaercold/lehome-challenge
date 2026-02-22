@@ -114,7 +114,8 @@ class LeRobotPolicy(BasePolicy):
             batch_action = self.postprocessor(batch_action)
             
         # 5. Convert to Numpy (Remove batch dimension)
-        return batch_action.squeeze(0).cpu().numpy()
+        # .float() required because numpy does not support bfloat16
+        return batch_action.squeeze(0).cpu().float().numpy()
 
     # --------------------------------------------------------------------------
     # Internal Helper Methods

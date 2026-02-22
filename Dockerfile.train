@@ -1,0 +1,32 @@
+# Training-only image for X-VLA fine-tuning on H100
+# Does NOT include IsaacSim — evaluation runs locally
+FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-devel
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV HF_HOME=/workspace/hf_cache
+
+WORKDIR /workspace
+
+# System deps
+RUN apt-get update && apt-get install -y \
+    git curl wget rsync \
+    libglib2.0-0 libsm6 libxrender1 libxext6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install lerobot with xvla extras
+# Pin transformers: >=4.47 required for Florence2LanguageConfig + huggingface-hub 1.x
+RUN pip install --no-cache-dir \
+    "lerobot[xvla]" \
+    "transformers>=4.47.0,<5.0.0" \
+    draccus \
+    huggingface_hub \
+    wandb
+
+# Copy project code (datasets/outputs/Assets mounted as volumes at runtime)
+COPY configs/ /workspace/configs/
+COPY scripts/ /workspace/scripts/
+COPY source/ /workspace/source/
+COPY pyproject.toml /workspace/
+
+CMD ["bash"]

@@ -1,12 +1,12 @@
 dataset:
   repo_id: repo_xvla
-  root: Datasets/example/four_types_merged/four_types_merged
+  root: Datasets/example/top_long_merged
 
 policy:
   type: xvla
   # 从官方预训练权重微调（而非从头训练）
   # 首次运行时会自动从 HuggingFace 下载 ~3.5GB 权重
-  pretrained_path: lerobot/xvla-base
+  pretrained_path: lerobot/xvla-folding
   device: cuda
   push_to_hub: false
 
@@ -93,7 +93,7 @@ policy:
 
   # 学习率调度（必须与 steps 同步，否则 LR 提前衰减到底）
   scheduler_warmup_steps: 1000
-  scheduler_decay_steps: 100000
+  scheduler_decay_steps: 50000
 
   # 微调策略：H100 全量微调（解冻 VLM，差分 LR 自动保护：VLM 用 1/10 LR）
   # VRAM 预算：~34GB（H100 80GB 完全够用）
@@ -105,9 +105,9 @@ policy:
   # 数值精度：bfloat16（H100 tensor core 专门优化，比 float32 快 2x，动态范围与 float32 相同）
   dtype: bfloat16
 
-output_dir: outputs/train/xvla_finetune_four_types
+output_dir: outputs/train/xvla_finetune_top_long_v3
 batch_size: 32
-steps: 100000
+steps: 50000
 save_freq: 10000
 log_freq: 1000
 

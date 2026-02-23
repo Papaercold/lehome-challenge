@@ -190,7 +190,7 @@ In a separate SSH window:
 watch -n 5 nvidia-smi
 
 # Training logs
-tail -f ~/lehome-challenge/outputs/train/xvla_finetune_top_long_h100/train.log
+tail -f ~/lehome-challenge/outputs/train/xvla_finetune_top_long_h100_v2/train.log
 ```
 
 Expected loss curve: starts ~0.7, drops to ~0.05–0.03 over 100K steps.
@@ -203,7 +203,7 @@ Expected loss curve: starts ~0.7, drops to ~0.05–0.03 over 100K steps.
 cd ~/lehome-challenge
 
 huggingface-cli upload <YOUR_HF_USERNAME>/<MODEL_REPO_NAME> \
-  outputs/train/xvla_finetune_top_long_h100/checkpoints/last/pretrained_model \
+  outputs/train/xvla_finetune_top_long_h100_v2/checkpoints/last/pretrained_model \
   . \
   --repo-type model
 ```
@@ -218,7 +218,7 @@ cd /media/zihan-gao/lehome-challenge
 
 huggingface-cli download <YOUR_HF_USERNAME>/<MODEL_REPO_NAME> \
   --repo-type model \
-  --local-dir outputs/train/xvla_finetune_top_long_h100/checkpoints/last/pretrained_model
+  --local-dir outputs/train/xvla_finetune_top_long_h100_v2/checkpoints/last/pretrained_model
 ```
 
 Run evaluation:
@@ -227,7 +227,7 @@ conda activate leisaac_dev
 
 python -m scripts.eval \
   --policy_type lerobot \
-  --policy_path outputs/train/xvla_finetune_top_long_h100/checkpoints/last/pretrained_model \
+  --policy_path outputs/train/xvla_finetune_top_long_h100_v2/checkpoints/last/pretrained_model \
   --garment_type top_long \
   --dataset_root Datasets/example/top_long_merged \
   --num_episodes 5 \

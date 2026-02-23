@@ -107,7 +107,7 @@ grep -n "gripper_idx] = 0.0\|torch.sigmoid" $ACTION_HUB
 - **配置文件**：`configs/train_xvla.yaml`
 - **action_mode**：`so101_bimanual`（12D 真实 → 20D 模型内部，补 8 个零）
 - **有效维度**：修复前 10D（无夹爪），修复后 12D（含夹爪）
-- **输出目录**：`outputs/train/xvla_finetune_top_long_h100/`
+- **输出目录**：`outputs/train/xvla_finetune_top_long_h100_v2/`
 - **总步数**：100K steps，每 10K 保存一次
 - **训练命令**：`lerobot-train --config_path=configs/train_xvla.yaml`
 

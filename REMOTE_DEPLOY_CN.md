@@ -190,7 +190,7 @@ lerobot-train --config_path=configs/train_xvla.yaml
 watch -n 5 nvidia-smi
 
 # 查看训练日志
-tail -f ~/lehome-challenge/outputs/train/xvla_finetune_top_long_h100/train.log
+tail -f ~/lehome-challenge/outputs/train/xvla_finetune_top_long_h100_v2/train.log
 ```
 
 预期 loss 曲线：从约 0.7 开始，100K steps 后降至 0.03–0.05。
@@ -207,7 +207,7 @@ huggingface-cli login
 
 # 上传训练好的模型权重
 huggingface-cli upload <你的HF用户名>/<模型仓库名> \
-  outputs/train/xvla_finetune_top_long_h100/checkpoints/last/pretrained_model \
+  outputs/train/xvla_finetune_top_long_h100_v2/checkpoints/last/pretrained_model \
   . \
   --repo-type model
 ```
@@ -222,7 +222,7 @@ cd /media/zihan-gao/lehome-challenge
 
 huggingface-cli download <你的HF用户名>/<模型仓库名> \
   --repo-type model \
-  --local-dir outputs/train/xvla_finetune_top_long_h100/checkpoints/last/pretrained_model
+  --local-dir outputs/train/xvla_finetune_top_long_h100_v2/checkpoints/last/pretrained_model
 ```
 
 然后启动评估：
@@ -231,7 +231,7 @@ conda activate leisaac_dev
 
 python -m scripts.eval \
   --policy_type lerobot \
-  --policy_path outputs/train/xvla_finetune_top_long_h100/checkpoints/last/pretrained_model \
+  --policy_path outputs/train/xvla_finetune_top_long_h100_v2/checkpoints/last/pretrained_model \
   --garment_type top_long \
   --dataset_root Datasets/example/top_long_merged \
   --num_episodes 5 \

@@ -1,6 +1,6 @@
 dataset:
   repo_id: repo_xvla
-  root: Datasets/example/top_long_merged
+  root: Datasets/example/four_types_merged/four_types_merged
 
 policy:
   type: xvla
@@ -105,7 +105,7 @@ policy:
   # 数值精度：bfloat16（H100 tensor core 专门优化，比 float32 快 2x，动态范围与 float32 相同）
   dtype: bfloat16
 
-output_dir: outputs/train/xvla_finetune_top_long_h100_v2
+output_dir: outputs/train/xvla_finetune_four_types
 batch_size: 32
 steps: 100000
 save_freq: 10000

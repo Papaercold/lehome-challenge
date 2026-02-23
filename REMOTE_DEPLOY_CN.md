@@ -58,10 +58,19 @@ python -c "import torch; print('CUDA:', torch.cuda.is_available(), torch.version
 
 ---
 
-## 第五步：安装 lerobot 和依赖
+## 第五步：从源码安装 lerobot（可编辑安装）
+
+源码安装的好处：直接修改源文件即可生效，无需重新安装。
 
 ```bash
-pip install "lerobot[xvla]"
+# 克隆 lerobot 源码
+git clone https://github.com/huggingface/lerobot.git ~/lerobot
+cd ~/lerobot
+git checkout v0.4.3        # 锁定已验证版本
+pip install -e ".[xvla]"   # 可编辑安装
+cd ~
+
+# 其他依赖
 pip install "transformers>=4.47.0,<5.0.0"
 pip install draccus huggingface_hub
 ```
@@ -76,7 +85,49 @@ python -c "from transformers import AutoModel; print('transformers OK')"
 
 ---
 
-## 第六步：拉取代码
+## 第六步：修复夹爪训练（Gripper Fix）
+
+默认的 `so101_bimanual` 模式在训练时会把夹爪维度清零，导致模型永远无法学会闭合夹爪。
+需要打上以下补丁：
+
+```bash
+# 找到 action_hub.py 的实际路径
+ACTION_HUB=$(python -c "import lerobot.policies.xvla.action_hub as m; import inspect; print(inspect.getfile(m))")
+echo $ACTION_HUB   # 应该在 ~/lerobot/ 目录下
+
+# 应用补丁
+python -c "
+path = '$ACTION_HUB'
+with open(path) as f:
+    lines = f.readlines()
+
+out = []
+for i, line in enumerate(lines):
+    if 'gripper_idx] = 0.0' in line:
+        continue
+    if 'if action_m is not None:' in line and i+1 < len(lines) and 'gripper_idx] = 0.0' in lines[i+1]:
+        continue
+    if 'gripper_idx] = torch.sigmoid' in line:
+        continue
+    if 'if action.size(-1) > max(self.gripper_idx)' in line and i+1 < len(lines) and 'torch.sigmoid' in lines[i+1]:
+        continue
+    out.append(line)
+
+with open(path, 'w') as f:
+    f.writelines(out)
+print('夹爪修复完成:', path)
+"
+```
+
+验证补丁已生效：
+```bash
+grep -n "gripper_idx] = 0.0\|torch.sigmoid" $ACTION_HUB
+# 预期：无输出（相关行已删除）
+```
+
+---
+
+## 第七步：拉取代码
 
 ```bash
 # 首次部署：克隆仓库
@@ -89,7 +140,7 @@ git pull
 
 ---
 
-## 第七步：下载数据集（在远程服务器执行）
+## 第八步：下载数据集（在远程服务器执行）
 
 ```bash
 cd ~/lehome-challenge
@@ -113,7 +164,7 @@ ls Datasets/example/
 
 ---
 
-## 第八步：启动训练
+## 第九步：启动训练
 
 ```bash
 cd ~/lehome-challenge
@@ -131,7 +182,7 @@ lerobot-train --config_path=configs/train_xvla.yaml
 
 ---
 
-## 第九步：监控训练
+## 第十步：监控训练
 
 另开一个 SSH 窗口：
 ```bash
@@ -146,11 +197,10 @@ tail -f ~/lehome-challenge/outputs/train/xvla_finetune_top_long_h100/train.log
 
 ---
 
-## 第十步：上传 Checkpoint 到 HuggingFace（在远程服务器执行）
+## 第十一步：上传 Checkpoint 到 HuggingFace（在远程服务器执行）
 
 ```bash
 cd ~/lehome-challenge
-conda activate xvla_train
 
 # 登录 HuggingFace（只需做一次）
 huggingface-cli login
@@ -158,20 +208,13 @@ huggingface-cli login
 # 上传训练好的模型权重
 huggingface-cli upload <你的HF用户名>/<模型仓库名> \
   outputs/train/xvla_finetune_top_long_h100/checkpoints/last/pretrained_model \
+  . \
   --repo-type model
-```
-
-上传中间 checkpoint（可选）：
-```bash
-huggingface-cli upload <你的HF用户名>/<模型仓库名> \
-  outputs/train/xvla_finetune_top_long_h100/checkpoints/010000/pretrained_model \
-  --repo-type model \
-  --commit-message "step 10000"
 ```
 
 ---
 
-## 第十一步：本地评估（在本地机器执行）
+## 第十二步：本地评估（在本地机器执行）
 
 先从 HuggingFace 下载 checkpoint：
 ```bash
@@ -189,11 +232,12 @@ conda activate leisaac_dev
 python -m scripts.eval \
   --policy_type lerobot \
   --policy_path outputs/train/xvla_finetune_top_long_h100/checkpoints/last/pretrained_model \
-  --garment_type "tops_long" \
+  --garment_type top_long \
   --dataset_root Datasets/example/top_long_merged \
   --num_episodes 5 \
   --enable_cameras \
-  --task_description "fold the garment on the table"
+  --task_description "fold the garment on the table" \
+  --headless
 ```
 
 ---

@@ -105,7 +105,7 @@ policy:
   # 数值精度：bfloat16（H100 tensor core 专门优化，比 float32 快 2x，动态范围与 float32 相同）
   dtype: bfloat16
 
-output_dir: outputs/train/xvla_finetune_top_long_v3
+output_dir: outputs/train/xvla_folding_finetune_top_long
 batch_size: 32
 steps: 50000
 save_freq: 10000

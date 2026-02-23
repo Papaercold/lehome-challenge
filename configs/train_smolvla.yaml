@@ -4,6 +4,7 @@ dataset:
 
 policy:
   type: smolvla
+  pretrained_path: outputs/train/smolvla_top_long/checkpoints/last/pretrained_model
   device: cuda
   push_to_hub: false
   

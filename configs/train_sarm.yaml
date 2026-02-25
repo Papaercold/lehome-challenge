@@ -1,0 +1,49 @@
+dataset:
+  repo_id: Papercold/top-long-merged
+
+policy:
+  type: sarm
+
+  # ── 标注模式：使用 Qwen 标注的细粒度子任务 ────────────────────────────────
+  annotation_mode: dense_only
+
+  # ── 子任务数量（与 sarm_annotate.sh 中的 DENSE_SUBTASKS 数量一致）────────
+  num_dense_stages: 6
+  dense_subtask_names:
+    - "Right arm reaches toward and grips the right sleeve cuff"
+    - "Right arm folds right sleeve inward toward garment center"
+    - "Left arm reaches toward and grips the left sleeve cuff"
+    - "Left arm folds left sleeve inward toward garment center"
+    - "Both arms grasp the lower hem and fold bottom half up onto top half"
+    - "Arms release garment and return to home position"
+
+  # ── 摄像头（必须与标注时使用的 VIDEO_KEY 一致）────────────────────────────
+  image_key: observation.images.top_rgb
+  state_key: observation.state
+
+  device: cuda
+
+  # ── 序列参数（默认值，一般不需要改）─────────────────────────────────────────
+  n_obs_steps: 8       # 双向观测帧数（前4 + 当前1 + 后4）
+  frame_gap: 30        # 帧间隔（30fps 下 = 1秒）
+  max_rewind_steps: 4  # 时间倒回增强步数
+
+  # ── 架构参数（默认值）──────────────────────────────────────────────────────
+  hidden_dim: 768
+  num_heads: 12
+  num_layers: 8
+  batch_size: 64
+  dropout: 0.1
+
+  # ── 学习率调度（必须与 steps 同步）──────────────────────────────────────────
+  # 在 configuration_sarm.py 的 get_scheduler_preset 里控制，下面通过 override 传入
+  push_to_hub: false
+
+output_dir: outputs/train/sarm_top_long
+batch_size: 64
+steps: 5000
+save_freq: 1000
+log_freq: 100
+
+wandb:
+  enable: false

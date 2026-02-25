@@ -9,7 +9,7 @@ REPO_ID="your-username/your-dataset-name"   # ← 改成你上传的 HF repo ID
 
 # ── 子任务定义（逗号分隔，Qwen 会根据这些名字在视频里找分界点）────────────────
 # 越具体越好，和实际动作顺序一致
-DENSE_SUBTASKS="Position arms above garment,Grab corners of garment,Fold first half onto second half,Flatten and align edges,Complete fold"
+DENSE_SUBTASKS="Right arm reaches toward and grips the right sleeve cuff,Right arm folds right sleeve inward toward garment center,Left arm reaches toward and grips the left sleeve cuff,Left arm folds left sleeve inward toward garment center,Both arms grasp the lower hem and fold bottom half up onto top half,Arms release garment and return to home position"
 
 # ── 使用的摄像头（用哪个视角让 Qwen 看）──────────────────────────────────────
 VIDEO_KEY="observation.images.top_rgb"      # top / left / right 三选一，top 视野最全

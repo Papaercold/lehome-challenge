@@ -53,7 +53,6 @@ python -m lerobot.data_processing.sarm_annotations.subtask_annotation \
     --num-visualizations $NUM_VISUALIZATIONS \
     --visualize-type dense \
     --output-dir "$VIZ_OUTPUT_DIR" \
-    --skip-existing \
     $PUSH_TO_HUB
 
 echo "=============================="
